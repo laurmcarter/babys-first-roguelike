@@ -77,7 +77,7 @@ def generate_dungeon(
     """
     Generate a new dungeon map.
     """
-    dungeon = GameMap(map_width, map_height)
+    dungeon = GameMap(map_width, map_height, entities=[player])
 
     rooms: List[RectangularRoom] = []
 
