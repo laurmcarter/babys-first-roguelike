@@ -4,14 +4,27 @@ from __future__ import annotations
 from typing import Optional, Tuple, TYPE_CHECKING
 
 import color
+import exceptions
 
 if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity
 
 class Action:
-    def __init__(self, entity: Actor) -> None:
+    def perform(self) -> bool:
+        """
+        Return whether the game's turn advances.
+        """
+        raise NotImplementedError()
+
+class ExitAction(Action):
+    def perform(self) -> bool:
+        raise SystemExit()
+
+class InGameAction(Action):
+    def __init__(self, entity: Entity):
         super().__init__()
+
         self.entity = entity
 
     @property
@@ -21,27 +34,11 @@ class Action:
         """
         return self.entity.game_map.engine
 
-    def perform(self) -> None:
-        """
-        Perform this action with the objects needed to determine its scope.
+class WaitAction(InGameAction):
+    def perform(self) -> bool:
+        return True
 
-        `self.engine` is the scope this action is being performed in.
-
-        `self.entity` is the object performing the action.
-
-        This method must be overridden by Action subclasses.
-        """
-        raise NotImplementedError()
-
-class EscapeAction(Action):
-    def perform(self) -> None:
-        raise SystemExit()
-
-class WaitAction(Action):
-    def perform(self) -> None:
-        pass
-
-class ActionWithDirection(Action):
+class ActionWithDirection(InGameAction):
     def __init__(
         self,
         entity: Actor,
@@ -74,15 +71,12 @@ class ActionWithDirection(Action):
         """
         return self.engine.game_map.get_actor_at_location(*self.dest_xy)
 
-    def perform(self) -> None:
-        raise NotImplementedError()
-
 class MeleeAction(ActionWithDirection):
-    def perform(self) -> None:
+    def perform(self) -> bool:
         target = self.target_actor
 
-        if not target:
-            return  # No entity to attack.
+        if target is None:
+            raise exceptions.Impossible("No entity to attack.") 
 
         damage = self.entity.fighter.power - target.fighter.defense
 
@@ -103,9 +97,10 @@ class MeleeAction(ActionWithDirection):
                 f"{attack_desc} but does no damage.",
                 attack_color,
             )
+        return True # Advance turn.
 
 class MovementAction(ActionWithDirection):
-    def perform(self) -> None:
+    def perform(self) -> bool:
         dest_x, dest_y = self.dest_xy
 
         if not self.engine.game_map.in_bounds(dest_x, dest_y):
@@ -116,9 +111,10 @@ class MovementAction(ActionWithDirection):
             return  # Destination is blocked by an entity.
 
         self.entity.move(self.dx, self.dy)
+        return True # Advance turn.
 
 class BumpAction(ActionWithDirection):
-    def perform(self) -> None:
+    def perform(self) -> bool:
         if self.target_actor:
             return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:

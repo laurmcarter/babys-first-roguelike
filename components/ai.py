@@ -6,16 +6,17 @@ from typing import List, Tuple, TYPE_CHECKING
 import numpy as np # type: ignore
 import tcod
 
-from actions import Action, MeleeAction, MovementAction, WaitAction
+from actions import (
+    InGameAction,
+    MeleeAction,
+    MovementAction,
+    WaitAction,
+)
 
 if TYPE_CHECKING:
     from entity import Actor
 
-class BaseAI(Action):
-
-    def perform(self) -> None:
-        raise NotImplementedError()
-
+class BaseAI(InGameAction):
     def get_path_to(
         self,
         dest_x: int,
@@ -59,7 +60,7 @@ class HostileEnemy(BaseAI):
         super().__init__(entity)
         self.path: List[Tuple[int, int]] = []
 
-    def perform(self) -> None:
+    def perform(self) -> bool:
         target = self.engine.player
         dx = target.x - self.entity.x
         dy = target.y - self.entity.y
