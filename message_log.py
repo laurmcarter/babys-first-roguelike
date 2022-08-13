@@ -69,9 +69,7 @@ class MessageLog:
         Return a wrapped text message.
         """
         for line in string.splitlines(): # Handle newlines in messages.
-            yield from textwrap.wrap(
-                line, width, expand_tabs=True,
-            )
+            yield from textwrap.wrap(line, width, expand_tabs=True)
 
     @classmethod
     def render_messages(
@@ -91,7 +89,7 @@ class MessageLog:
         y_offset = height - 1
 
         for message in reversed(messages):
-            for line in reversed(cls.wrap(message.full_text, width)):
+            for line in reversed(list(cls.wrap(message.full_text, width))):
                 console.print(
                     x=x,
                     y=y + y_offset,
