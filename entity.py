@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING
+from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
 
 from render_order import RenderOrder
 
@@ -20,7 +20,7 @@ class Entity:
     A generic object to represent players, enemies, items, etc.
     """
     
-    parent: GameMap
+    parent: Union[GameMap, Inventory]
 
     def __init__(
         self,
@@ -45,6 +45,7 @@ class Entity:
             self.parent = parent
             parent.entities.add(self)
 
+    # FIXME
     @property
     def game_map(self) -> GameMap:
         return self.parent.game_map
@@ -109,10 +110,10 @@ class Actor(Entity):
         self.ai: Optional[BaseAI] = ai_cls(self)
 
         self.fighter = fighter
-        self.fighter.parent = self
+        self.fighter.entity = self
 
         self.inventory = inventory
-        self.inventory.parent = self
+        self.inventory.entity = self
 
     @property
     def is_alive(self) -> bool:
@@ -143,5 +144,5 @@ class Item(Entity):
         )
 
         self.consumable = consumable
-        self.consumable.parent = self
+        self.consumable.entity = self
 

@@ -9,16 +9,16 @@ if TYPE_CHECKING:
     from game_map import GameMap
 
 class BaseComponent:
-    parent: Entity # Owning entity instance
+    entity: Entity # Owning entity instance
 
-    def __init__(self, parent: Entity):
+    def __init__(self, entity: Entity):
         super().__init__()
 
-        self.parent = parent
+        self.entity = entity
 
     @property
     def game_map(self) -> GameMap:
-        return self.parent.game_map
+        return self.entity.game_map
 
     @property
     def engine(self) -> Engine:
