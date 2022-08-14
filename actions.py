@@ -21,7 +21,7 @@ class ExitAction(Action):
     def perform(self) -> bool:
         raise SystemExit()
 
-class InGameAction(Action):
+class EntityAction(Action):
     def __init__(self, entity: Actor):
         super().__init__()
 
@@ -34,7 +34,7 @@ class InGameAction(Action):
         """
         return self.entity.game_map.engine
 
-class ItemAction(InGameAction):
+class ItemAction(EntityAction):
     def __init__(
         self,
         entity: Actor,
@@ -60,11 +60,50 @@ class ItemAction(InGameAction):
         """
         self.item.consumable.activate(self)
 
-class WaitAction(InGameAction):
+        return True # Advance turn.
+
+class WaitAction(EntityAction):
     def perform(self) -> bool:
         return True
 
-class ActionWithDirection(InGameAction):
+class PickupAction(EntityAction):
+    """
+    Pickup an item and add it to the inventory, if there is room for it.
+    """
+    def __init__(self, entity: Actor):
+        super().__init__(entity)
+
+    def perform(self) -> None:
+        actor_location_x = self.entity.x
+        actor_location_y = self.entity.y
+        inventory = self.entity.inventory
+
+        for item in self.engine.game_map.items:
+            if (
+                actor_location_x == item.x
+                and actor_location_y == item.y
+            ):
+                if len(inventory.items) >= inventory.capacity:
+                    if self.entity is self.engine.player:
+                        raise exceptions.Impossible("Your inventory is full.")
+                    else:
+                        return # Don't log enemies failing to pick up items.
+
+                self.engine.game_map.entities.remove(item)
+                item.parent = self.entity.inventory
+                inventory.items.append(item)
+
+
+                if self.entity is self.engine.player:
+                    self.engine.message_log.add_message(
+                        f"You picked up the {item.name}!"
+                    )
+
+                return
+
+        raise exceptions.Impossible("There is nothing here to pick up.")
+
+class ActionWithDirection(EntityAction):
     def __init__(
         self,
         entity: Actor,
