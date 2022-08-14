@@ -11,6 +11,11 @@ if TYPE_CHECKING:
 class BaseComponent:
     parent: Entity # Owning entity instance
 
+    def __init__(self, parent: Entity):
+        super().__init__()
+
+        self.parent = parent
+
     @property
     def game_map(self) -> GameMap:
         return self.parent.game_map

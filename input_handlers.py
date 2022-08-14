@@ -61,7 +61,9 @@ class EventHandler(tcod.event.EventDispatch[Action]):
         self,
         event: tcod.event.Event,
     ) -> None:
-        self.handle_action(self.dispatch(event))
+        action = self.dispatch(event)
+
+        self.handle_action(action)
 
     def handle_action(self, action: Optional[Action]) -> None:
         """

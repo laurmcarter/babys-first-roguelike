@@ -8,7 +8,7 @@ import exceptions
 
 if TYPE_CHECKING:
     from engine import Engine
-    from entity import Actor, Entity
+    from entity import Actor, Entity, Item
 
 class Action:
     def perform(self) -> bool:
@@ -22,7 +22,7 @@ class ExitAction(Action):
         raise SystemExit()
 
 class InGameAction(Action):
-    def __init__(self, entity: Entity):
+    def __init__(self, entity: Actor):
         super().__init__()
 
         self.entity = entity
@@ -33,6 +33,32 @@ class InGameAction(Action):
         Return the engine this action belongs to.
         """
         return self.entity.game_map.engine
+
+class ItemAction(InGameAction):
+    def __init__(
+        self,
+        entity: Actor,
+        item: Item,
+        target_xy: Optional[Tuple[int, int]] = None,
+    ):
+        super().__init__(entity)
+        self.item = item
+        if target_xy is None:
+            target_xy = entity.x, entity.y
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """
+        Return the actor at this action's destination.
+        """
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> bool:
+        """
+        Invoke the item's ability.
+        """
+        self.item.consumable.activate(self)
 
 class WaitAction(InGameAction):
     def perform(self) -> bool:
@@ -104,11 +130,11 @@ class MovementAction(ActionWithDirection):
         dest_x, dest_y = self.dest_xy
 
         if not self.engine.game_map.in_bounds(dest_x, dest_y):
-            return  # Destination is out of bounds.
+            raise exceptions.Impossible("Destination is out of bounds.")
         if not self.engine.game_map.tiles["walkable"][dest_x, dest_y]:
-            return  # Destination is blocked by a tile.
+            raise exceptions.Impossible("Destination is blocked by a tile.")
         if self.blocking_entity:
-            return  # Destination is blocked by an entity.
+            raise exceptions.Impossible("Destination is blocked by an entity.")
 
         self.entity.move(self.dx, self.dy)
         return True # Advance turn.
