@@ -7,7 +7,7 @@ import numpy as np # type: ignore
 import tcod
 
 from actions import (
-    EntityAction,
+    ActorDrivenAction,
     MeleeAction,
     MovementAction,
     WaitAction,
@@ -16,7 +16,7 @@ from actions import (
 if TYPE_CHECKING:
     from entity import Actor
 
-class BaseAI(EntityAction):
+class BaseAI(ActorDrivenAction):
     def get_path_to(
         self,
         dest_x: int,

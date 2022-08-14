@@ -10,18 +10,23 @@ if TYPE_CHECKING:
     from engine import Engine
     from entity import Actor, Entity, Item
 
-class Action:
+class Action: # {{{
     def perform(self) -> bool:
         """
         Return whether the game's turn advances.
         """
         raise NotImplementedError()
 
+# }}}
+# subclasses {{{
+
 class ExitAction(Action):
     def perform(self) -> bool:
         raise SystemExit()
 
-class EntityAction(Action):
+# }}}
+
+class ActorDrivenAction(Action): # {{{
     def __init__(self, entity: Actor):
         super().__init__()
 
@@ -34,39 +39,14 @@ class EntityAction(Action):
         """
         return self.entity.game_map.engine
 
-class ItemAction(EntityAction):
-    def __init__(
-        self,
-        entity: Actor,
-        item: Item,
-        target_xy: Optional[Tuple[int, int]] = None,
-    ):
-        super().__init__(entity)
-        self.item = item
-        if target_xy is None:
-            target_xy = entity.x, entity.y
-        self.target_xy = target_xy
+# }}}
+# subclasses {{{
 
-    @property
-    def target_actor(self) -> Optional[Actor]:
-        """
-        Return the actor at this action's destination.
-        """
-        return self.engine.game_map.get_actor_at_location(*self.target_xy)
-
-    def perform(self) -> bool:
-        """
-        Invoke the item's ability.
-        """
-        self.item.consumable.activate(self)
-
-        return True # Advance turn.
-
-class WaitAction(EntityAction):
+class WaitAction(ActorDrivenAction):
     def perform(self) -> bool:
         return True
 
-class PickupAction(EntityAction):
+class PickupAction(ActorDrivenAction):
     """
     Pickup an item and add it to the inventory, if there is room for it.
     """
@@ -103,7 +83,46 @@ class PickupAction(EntityAction):
 
         raise exceptions.Impossible("There is nothing here to pick up.")
 
-class ActionWithDirection(EntityAction):
+# }}}
+
+class ItemAction(ActorDrivenAction): # {{{
+    def __init__(
+        self,
+        entity: Actor,
+        item: Item,
+        target_xy: Optional[Tuple[int, int]] = None,
+    ):
+        super().__init__(entity)
+        self.item = item
+        if target_xy is None:
+            target_xy = entity.x, entity.y
+        self.target_xy = target_xy
+
+    @property
+    def target_actor(self) -> Optional[Actor]:
+        """
+        Return the actor at this action's destination.
+        """
+        return self.engine.game_map.get_actor_at_location(*self.target_xy)
+
+    def perform(self) -> bool:
+        """
+        Invoke the item's ability.
+        """
+        self.item.consumable.activate(self)
+
+        return True # Advance turn.
+
+# }}}
+# subclasses {{{
+
+class DropAction(ItemAction):
+    def perform(self) -> None:
+        self.entity.inventory.drop(self.item)
+
+# }}}
+
+class ActionWithDirection(ActorDrivenAction): # {{{
     def __init__(
         self,
         entity: Actor,
@@ -135,6 +154,9 @@ class ActionWithDirection(EntityAction):
         Returns the actor at this action's destination.
         """
         return self.engine.game_map.get_actor_at_location(*self.dest_xy)
+
+# }}}
+# subclasses {{{
 
 class MeleeAction(ActionWithDirection):
     def perform(self) -> bool:
@@ -184,4 +206,6 @@ class BumpAction(ActionWithDirection):
             return MeleeAction(self.entity, self.dx, self.dy).perform()
         else:
             return MovementAction(self.entity, self.dx, self.dy).perform()
+
+# }}}
 
