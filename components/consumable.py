@@ -15,7 +15,7 @@ from exceptions import Impossible
 if TYPE_CHECKING:
     from entity import Actor, Item
 
-class Consumable(BaseComponent):
+class Consumable(BaseComponent): # {{{
     entity: Item
 
     def get_action(self, consumer: Actor) -> Optional[Action]:
@@ -41,7 +41,9 @@ class Consumable(BaseComponent):
         if isinstance(inventory, Inventory):
             inventory.items.remove(entity)
 
-class HealingConsumable(Consumable):
+# }}}
+
+class HealingConsumable(Consumable): # {{{
     def __init__(self, amount: int):
         self.amount = amount
 
@@ -57,4 +59,36 @@ class HealingConsumable(Consumable):
             self.consume()
         else:
             raise Impossible("Your health is already full.")
+
+# }}}
+
+class LightningDamageConsumable(Consumable):
+    def __init__(self, damage: int, maximum_range: int):
+        self.damage = damage
+        self.maximum_range = maximum_range
+
+    def activate(self, action: ItemAction) -> None:
+        consumer = action.entity
+        target = None
+        closest_distance = self.maximum_range + 1.0
+
+        for actor in self.engine.game_map.actors:
+            if (
+                actor is not consumer
+                and self.entity.game_map.visible[actor.x, actor.y]
+            ):
+                distance = consumer.distance(actor.x, actor.y)
+
+                if distance < closest_distance:
+                    target = actor
+                    closest_distance = distance
+
+        if target:
+            self.engine.message_log.add_message(
+                f"A lightning bolt strikes the {target.name} with a deafening clap of thunder, for {self.damage} damage!"
+            )
+            target.fighter.take_damage(self.damage)
+            self.consume()
+        else:
+            raise Impossible("No enemy is close enough to strike.")
 

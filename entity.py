@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import copy
+import math
 from typing import Optional, Tuple, Type, TypeVar, TYPE_CHECKING, Union
 
+import color
 from render_order import RenderOrder
 
 if TYPE_CHECKING:
@@ -28,7 +30,7 @@ class Entity:
         x: int = 0,
         y: int = 0,
         char: str = "?",
-        color: Tuple[int, int, int] = (255, 255, 255),
+        color: Tuple[int, int, int] = color.white,
         name: str = "<Unnamed>",
         blocks_movement: bool = False,
         render_order: RenderOrder = RenderOrder.CORPSE,
@@ -79,6 +81,12 @@ class Entity:
             self.parent = game_map
             game_map.entities.add(self)
 
+    def distance(self, x: int, y: int) -> float:
+        """
+        Return the distance between this entity and the given (x, y) coordinate.
+        """
+        return math.sqrt((x - self.x) ** 2 + (y - self.y) ** 2)
+
     def move(self, dx: int, dy: int) -> None:
         # Move the entity by a given amount
         self.x += dx
@@ -91,7 +99,7 @@ class Actor(Entity):
         x: int = 0,
         y: int = 0,
         char: str = "?",
-        color: Tuple[int, int, int] = (255, 255, 255),
+        color: Tuple[int, int, int] = color.white,
         name: str = "<Unnamed>",
         ai_cls: Type[BaseAI],
         fighter: Fighter,
@@ -129,7 +137,7 @@ class Item(Entity):
         x: int = 0,
         y: int = 0,
         char: str = "?",
-        color: Tuple[int, int, int] = (255, 255, 255),
+        color: Tuple[int, int, int] = color.white,
         name: str = "<Unnamed>",
         consumable: Consumable,
     ):
