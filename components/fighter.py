@@ -7,6 +7,7 @@ import color
 from components.base_component import BaseComponent
 from input_handlers import GameOverEventHandler
 from render_order import RenderOrder
+import utility
 
 if TYPE_CHECKING:
     from entity import Actor
@@ -31,7 +32,7 @@ class Fighter(BaseComponent):
 
     @hp.setter
     def hp(self, value: int) -> None:
-        self._hp = max(0, min(value, self.max_hp))
+        self._hp = utility.clamp(value, lo=0, hi=self.max_hp)
         if self._hp == 0 and self.entity.ai:
             self.die()
 

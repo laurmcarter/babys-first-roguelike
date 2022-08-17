@@ -47,3 +47,17 @@ lightning_scroll = Item(
     consumable=consumable.LightningDamageConsumable(damage=20, maximum_range=5)
 )
 
+confusion_scroll = Item(
+    char="~",
+    color=(0xCF, 0x3F, 0xFF),
+    name="Confusion Scroll",
+    consumable=consumable.ConfusionConsumable(number_of_turns=10),
+)
+
+fireball_scroll = Item(
+    char="~",
+    color=color.red,
+    name="Fireball Scroll",
+    consumable=consumable.FireballDamageConsumable(damage=12, radius=3),
+)
+

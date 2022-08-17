@@ -71,9 +71,9 @@ def place_entities(
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             monster_chance = random.random()
 
-            if monster_chance < 0.8:
+            if monster_chance < 0.8: # 80%
                 entity_factories.orc.spawn(dungeon, x, y)
-            else:
+            else: # 20%
                 entity_factories.troll.spawn(dungeon, x, y)
 
     for i in range(number_of_items):
@@ -82,9 +82,13 @@ def place_entities(
         if not any(entity.x == x and entity.y == y for entity in dungeon.entities):
             item_chance = random.random()
 
-            if item_chance < 0.7:
+            if item_chance < 0.7: # 70%
                 entity_factories.health_potion.spawn(dungeon, x, y)
-            else:
+            elif item_chance < 0.8: # 10%
+                entity_factories.fireball_scroll.spawn(dungeon, x, y)
+            elif item_chance < 0.9: # 10%
+                entity_factories.confusion_scroll.spawn(dungeon, x, y)
+            else: # 10%
                 entity_factories.lightning_scroll.spawn(dungeon, x, y)
 
 def tunnel_between(
